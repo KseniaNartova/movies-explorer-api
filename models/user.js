@@ -3,8 +3,6 @@ const bcrypt = require('bcryptjs');
 const isEmail = require('validator/lib/isEmail');
 const AuthError = require('../errors/AuthError');
 
-//const regexValid = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
-
 const userSchema = new mongoose.Schema(
   {
     name: {
