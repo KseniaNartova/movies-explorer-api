@@ -4,14 +4,24 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ConflictError = require('../errors/ConflictError');
+const {
+  USER_NOT_FOUND,
+  INCORRECT_DATA,
+  EMAIL_ALREADY_EXISTS,
+} = require('../utils/constants');
 
 const { SECRET_JWT = 'dev-secret' } = process.env;
 
 module.exports.getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(new NotFoundError('Пользователь не найден'))
+    .orFail(new NotFoundError(USER_NOT_FOUND))
     .then((user) => res.send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequestError(INCORRECT_DATA));
+      }
+      return next(err);
+    });
 };
 
 module.exports.updateUser = (req, res, next) => {
@@ -21,11 +31,14 @@ module.exports.updateUser = (req, res, next) => {
     { name, email },
     { new: true, runValidators: true },
   )
-    .orFail(new NotFoundError('Пользователь не найден'))
+    .orFail(new NotFoundError(USER_NOT_FOUND))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError(INCORRECT_DATA));
+      }
+      if (err.code === 11000) {
+        return next(new ConflictError(EMAIL_ALREADY_EXISTS));
       }
       return next(err);
     });
@@ -62,10 +75,10 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError(INCORRECT_DATA));
       }
       if (err.code === 11000) {
-        return next(new ConflictError('Пользователь с таким email уже существует'));
+        return next(new ConflictError(EMAIL_ALREADY_EXISTS));
       }
       return next(err);
     });

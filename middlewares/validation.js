@@ -1,11 +1,12 @@
 const { celebrate, Joi } = require('celebrate');
 const isURL = require('validator/lib/isURL');
+const { INCORRECT_FIELD } = require('../utils/constants');
 
 const urlValidation = (value, helpers) => {
   if (isURL(value)) {
     return value;
   }
-  return helpers.message('поле заполнено некорректно');
+  return helpers.message(INCORRECT_FIELD);
 };
 
 const createUserValidator = celebrate({
